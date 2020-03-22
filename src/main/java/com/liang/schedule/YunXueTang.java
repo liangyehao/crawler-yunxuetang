@@ -137,7 +137,7 @@ public class YunXueTang implements ApplicationContextAware {
                     i++;
                 }
             } else {
-                log.info("第 [{}] 个视频还未播放完毕,不执行此次定时任务,[{}]毫秒后检查时间是否超过[{}]",  i, fixedRateString, nextTime);
+                log.info("第 [{}] 个视频还未播放完毕,不执行此次定时任务,[{}]毫秒后检查时间是否超过[{}]",  (i-1), fixedRateString, nextTime);
             }
         }
     }
