@@ -5,6 +5,11 @@ spring:
   application:
     name: crawler-yunxuetang
 
+#监控信息
+info:
+  app.name: crawler-yunxuetang
+  company.name: Copyright by lyeh
+
 
 ####爬取云学堂视频学习
 # urlPath 视频列表页面
