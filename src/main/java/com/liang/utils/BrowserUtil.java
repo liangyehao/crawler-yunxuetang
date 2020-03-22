@@ -17,7 +17,6 @@ public class BrowserUtil {
      * @throws Exception 异常
      */
     public static void browse(String browserPath,String url) throws Exception {
-        System.out.println("调用360极速浏览器播放视频:::");
         ProcessBuilder proc =
                 new ProcessBuilder(browserPath,url);
         proc.start();
