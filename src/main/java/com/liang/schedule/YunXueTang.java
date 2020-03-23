@@ -85,6 +85,12 @@ public class YunXueTang implements ApplicationContextAware {
     @Value("${yunxuetang.disguiseRate}")
     private String disguiseRateString;
 
+    /**
+     * 打开浏览器访问频率
+     */
+    @Value("${yunxuetang.browseRate}")
+    private String browseRate;
+
 
     @PostConstruct
     public void initTask() {
@@ -154,6 +160,15 @@ public class YunXueTang implements ApplicationContextAware {
             log.error("程序关闭!未爬取到任何课程信息,cookie信息可能已过期,请更新cookie信息后重启!");
             context.close();
         }
+    }
+
+    /**
+     * 每隔一段时间伪装访问一次任务列表防止cookie过期
+     */
+    @Scheduled(fixedRateString = "${yunxuetang.browseRate}")
+    private void browse() throws Exception {
+        log.info("每隔[{}]毫秒打开浏览器访问一次任务列表,防止cookie过期", browseRate);
+        BrowserUtil.browse(browserPath,url);
     }
 
 
