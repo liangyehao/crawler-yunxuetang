@@ -103,6 +103,31 @@ public class YunXueTang implements ApplicationContextAware {
         log.warn("伪装访问频率 [{}] 毫秒", disguiseRateString);
     }
 
+
+    /**
+     * 每隔一段时间伪装访问一次任务列表防止cookie过期
+     */
+    @Scheduled(fixedRateString = "${yunxuetang.browseRate}")
+    private void browse() throws Exception {
+        log.info("每隔[{}]毫秒打开浏览器访问一次任务列表,防止cookie过期", browseRate);
+        BrowserUtil.browse(browserPath,url);
+    }
+
+    /**
+     * 每隔一段时间伪装访问一次任务列表防止cookie过期
+     */
+    @Scheduled(fixedRateString = "${yunxuetang.disguiseRate}")
+    private void checkCookies() {
+        log.info("每隔[{}]毫秒伪装访问一次任务列表,防止cookie过期", disguiseRateString);
+        taskList =
+                CookieCrawlUtil.getTaskList(url, cookies);
+        if (taskList.size() == 0) {
+            log.error("程序关闭!未爬取到任何课程信息,cookie信息可能已过期,请更新cookie信息后重启!");
+            context.close();
+        }
+    }
+
+
     /**
      * 3.添加定时任务
      *
@@ -146,29 +171,6 @@ public class YunXueTang implements ApplicationContextAware {
                 log.info("第 [{}] 个视频还未播放完毕,不执行此次定时任务,[{}]毫秒后检查时间是否超过[{}]",  (i-1), fixedRateString, nextTime);
             }
         }
-    }
-
-    /**
-     * 每隔一段时间伪装访问一次任务列表防止cookie过期
-     */
-    @Scheduled(fixedRateString = "${yunxuetang.disguiseRate}")
-    private void checkCookies() {
-        log.info("每隔[{}]毫秒伪装访问一次任务列表,防止cookie过期", disguiseRateString);
-        taskList =
-                CookieCrawlUtil.getTaskList(url, cookies);
-        if (taskList.size() == 0) {
-            log.error("程序关闭!未爬取到任何课程信息,cookie信息可能已过期,请更新cookie信息后重启!");
-            context.close();
-        }
-    }
-
-    /**
-     * 每隔一段时间伪装访问一次任务列表防止cookie过期
-     */
-    @Scheduled(fixedRateString = "${yunxuetang.browseRate}")
-    private void browse() throws Exception {
-        log.info("每隔[{}]毫秒打开浏览器访问一次任务列表,防止cookie过期", browseRate);
-        BrowserUtil.browse(browserPath,url);
     }
 
 
