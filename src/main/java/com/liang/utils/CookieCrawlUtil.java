@@ -11,10 +11,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author liangyehao
@@ -23,6 +21,9 @@ import java.util.Map;
  * @content
  */
 public class CookieCrawlUtil {
+
+    private static String prefix = "http://lianjia.yunxuetang.cn/kng";
+    private static String suffix = ".html";
 
     public static void main(String[] args) throws Exception {
 
@@ -56,23 +57,89 @@ public class CookieCrawlUtil {
         for (Element element : select) {
             //标题
             String title = getTitleFromElement(element);
+            //跳过考试
+            if (element.toString().contains("/exam/exampreview.htm")||title.contains("考试")){
+                continue;
+            }
             //进度
-            String propress = getProgressFromElement(element);
+            String progress = getProgressFromElement(element);
             //视频路径
             String videoUrl = getVideoUrlFromElement(element);
             //时长
             String minute = getTimeFromElement(element);
 
-            Map<String,String> map = new HashMap<>(4);
-            map.put("title",title);
-            map.put("progress",propress);
-            map.put("videoUrl",videoUrl);
-            map.put("minute",minute);
 
-            result.add(map);
+            // 有视频包的情况
+            if (videoUrl.contains("/package/")) {
+                List<Map> videoListFromPackage = getVideoListFromPackage(title, getHtmlByCookie(videoUrl, cookie));
+                result.addAll(videoListFromPackage);
+            }else{
+                Map<String,String> map = new HashMap<>(4);
+                map.put("title",title);
+                map.put("progress",progress);
+                map.put("videoUrl",videoUrl);
+                map.put("minute",minute);
+                result.add(map);
+            }
+
         }
 
         return result;
+    }
+
+    private static List<Map> getVideoListFromPackage(String parentTitle,String videoPackageHtml){
+        List<Map> listInPackage = new ArrayList<>();
+        Document doc = Jsoup.parse(videoPackageHtml);
+        Elements select = doc.select("div[class=normalrow clearfix]");
+        for (Element element : select) {
+            // 获取视频链接
+            Elements urlElement = element.select("a[class=text-color6]");
+            String href = urlElement.attr("href");
+            // 过滤考试链接
+            if (!href.contains("/exam/exampreview.htm")) {
+                StringBuilder videoUrl = new StringBuilder(prefix+"/course");
+                String[] split = href.split("'");
+                for (String s : split) {
+                    if (s.contains("/package/")){
+                        videoUrl.append(s);
+                    }
+                }
+                // 获取标题
+                String title = parentTitle+" -> "+urlElement.text();
+
+                // 获取进度
+                String progress = element.select("td[class=fontnumber]").text();
+
+                // 获取时长
+                Elements parents = element.select("span[data-localize='kng_lbl_minutes']").parents();
+                String minute = parents.get(0).text();
+
+                HashMap<String, String> map = new HashMap<>();
+                map.put("title",title);
+                map.put("progress",progress);
+                map.put("videoUrl",videoUrl.toString());
+                map.put("minute",minute);
+                listInPackage.add(map);
+            }
+        }
+
+        return listInPackage;
+    }
+
+    private static String getFirstVideoUrlFromPackage(String videoPackageHtml) {
+        Document doc = Jsoup.parse(videoPackageHtml);
+        Elements select = doc.select("div[class=normalrow clearfix]");
+        // 只取第一个,打开第一个会自动播放整个包里的视频
+        Elements urlElement = select.get(0).select("a[class=text-color6]");
+        String href = urlElement.attr("href");
+        StringBuilder videoUrl = new StringBuilder(prefix+"/course");
+        String[] split = href.split("'");
+        for (String s : split) {
+            if (s.contains("/package/")){
+                videoUrl.append(s);
+            }
+        }
+        return videoUrl.toString();
     }
 
     /**
@@ -104,8 +171,7 @@ public class CookieCrawlUtil {
             String onclick = element.attributes().getIgnoreCase("onclick");
             String frondString = onclick.substring(0, onclick.indexOf("/plan/"));
             String urlWithPrefix = onclick.substring(0,onclick.indexOf(".html"));
-            String prefix = "http://sinobest.yunxuetang.cn/kng/";
-            String suffix = ".html";
+//            String prefix = "http://sinobest.yunxuetang.cn/kng/";
             return prefix + urlWithPrefix.replace(frondString,"") + suffix;
         } catch (Exception e) {
             System.out.println("获取视频地址出错::::::::::");

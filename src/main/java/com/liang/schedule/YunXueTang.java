@@ -1,5 +1,6 @@
 package com.liang.schedule;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.liang.utils.BrowserUtil;
 import com.liang.utils.CookieCrawlUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -97,10 +98,17 @@ public class YunXueTang implements ApplicationContextAware {
         LocalDateTime startTime = LocalDateTime.now();
         log.warn("首个任务开始时间: {}", startTime);
         taskList = CookieCrawlUtil.getTaskList(url, cookies);
-        log.warn("当前总任务数: {}", taskList.size());
+        int size = taskList.size();
+        log.warn("当前总任务数: {}", size);
         log.warn("当前用户[{}]", userName);
         log.warn("执行频率 [{}] 毫秒", fixedRateString);
         log.warn("伪装访问频率 [{}] 毫秒", disguiseRateString);
+        log.info("--------------视频列表 start--------------");
+        for (int i = 0; i < size; i++) {
+            log.info("【{}】 {}",i+1,taskList.get(i));
+        }
+        log.info("--------------视频列表 end--------------");
+        
     }
 
 
